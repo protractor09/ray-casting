@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.cache/
+*.log
+*.tmp
