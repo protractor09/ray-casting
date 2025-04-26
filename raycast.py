@@ -5,19 +5,24 @@ import sys
 FOV=math.pi/3
 HALF_FOV=FOV/2
 SCREEN_HEIGHT=480
-SCREEN_WIDTH=960
+SCREEN_WIDTH=SCREEN_HEIGHT*2
 TILE_SIZE=int((SCREEN_HEIGHT/2)/8)
 M_T=8
 
 CASTED_RAYS=160
 DEPTH=int(M_T*TILE_SIZE)
+SCALE = (SCREEN_WIDTH / 2) / CASTED_RAYS
 
 
 
-p_x = (SCREEN_WIDTH / 2) / 2
-p_y = (SCREEN_WIDTH / 2) / 2
+
+p_x = 200 
+p_y = 200
 p_a=math.pi
 
+
+light_grey = (191, 191, 191)
+dark_grey = (65, 65, 65)
 
 MAP=  ('########'
        '# #    #'    
@@ -35,8 +40,6 @@ pygame.display.set_caption("Ray-Caster")
 clock=pygame.time.Clock()
 
 def draw_map():
-    light_grey = (191, 191, 191)
-    dark_grey = (65, 65, 65)
     for i in range(M_T):
         for j in range(M_T):
             sq=i*M_T+j
@@ -57,7 +60,21 @@ def raycast():
             square=row*M_T + col #map sq indx
             if 0<=col<M_T and 0<=row<M_T:
                 if MAP[square]=='#':
+                    pygame.draw.rect(window, (195, 137, 38), 
+                            (col * TILE_SIZE, row * TILE_SIZE, 
+                            TILE_SIZE - 1, TILE_SIZE - 1))  
+
                     pygame.draw.line(window,'white',(p_x,p_y),(t_x,t_y))
+
+                    wall_height = 21000 / (j)
+                    if wall_height>SCREEN_HEIGHT:
+                        wall_height=SCREEN_HEIGHT
+
+                    color = 255 / (1 + j * j* 0.0001)
+                    j*= math.cos(p_a - start_angle) 
+
+                    pygame.draw.rect(window,light_grey,(SCREEN_HEIGHT + i* SCALE, (SCREEN_HEIGHT / 2) - wall_height / 2, SCALE, wall_height))
+
                     break
         start_angle+=(FOV/CASTED_RAYS) # at what angle to make the next line
 
@@ -74,8 +91,16 @@ while True:
             pygame.quit()
             sys.exit(0)
 
+    pygame.draw.rect(window, (0, 0, 0), (0, 0, SCREEN_HEIGHT, SCREEN_HEIGHT))
+
+    pygame.draw.rect(window, (0, 0, 0), (480, SCREEN_HEIGHT/2, SCREEN_HEIGHT, SCREEN_HEIGHT))
+    pygame.draw.rect(window, (0,0,0), (480, -SCREEN_HEIGHT /2, SCREEN_HEIGHT, SCREEN_HEIGHT))
+
     draw_map()
     raycast()
+
+
+    #player movement
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         #working with radians, not degrees
@@ -90,6 +115,10 @@ while True:
         forward = False
         p_x -= -1 * math.sin(p_a) * 5
         p_y -= math.cos(p_a) * 5
+
+    #collision detection
+    
+
     pygame.display.flip()
     clock.tick(30)
 
