@@ -11,7 +11,7 @@ M_T=8
 
 CASTED_RAYS=160
 DEPTH=int(M_T*TILE_SIZE)
-SCALE = (SCREEN_WIDTH / 2) / CASTED_RAYS
+SCALE = ((SCREEN_WIDTH /2) / CASTED_RAYS) +2
 
 
 
@@ -23,10 +23,11 @@ p_a=math.pi
 
 light_grey = (191, 191, 191)
 dark_grey = (65, 65, 65)
+red=(123,123,123)
 
 MAP=  ('########'
        '# #    #'    
-       '# #  ###'    
+       '# #  # #'    
        '#      #'   
        '##     #'   
        '#  ### #'   
@@ -42,7 +43,7 @@ clock=pygame.time.Clock()
 def draw_map():
     for i in range(M_T):
         for j in range(M_T):
-            sq=i*M_T+j
+            sq=i*M_T+j  
             pygame.draw.rect(window,light_grey if MAP[sq]=='#' else dark_grey,(j*TILE_SIZE,i*TILE_SIZE,TILE_SIZE-1,TILE_SIZE-1))
     pygame.draw.circle(window,(0,0,0),(int(p_x),int(p_y)),7)
 
@@ -57,23 +58,23 @@ def raycast():
             col=int(t_x/TILE_SIZE) #convert to map coords
             row=int(t_y/TILE_SIZE)
 
-            square=row*M_T + col #map sq indx
+            square=row*M_T +col #map sq indx
             if 0<=col<M_T and 0<=row<M_T:
                 if MAP[square]=='#':
-                    pygame.draw.rect(window, (195, 137, 38), 
-                            (col * TILE_SIZE, row * TILE_SIZE, 
-                            TILE_SIZE - 1, TILE_SIZE - 1))  
+                    pygame.draw.rect(window, (195, 137, 38), (col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE - 1, TILE_SIZE - 1))  
 
                     pygame.draw.line(window,'white',(p_x,p_y),(t_x,t_y))
 
+                    color = 255 / (1 + j * j* 0.0001) #depth
+
+                    j*= math.cos(p_a - start_angle) #fisheye
+
                     wall_height = 21000 / (j)
+
                     if wall_height>SCREEN_HEIGHT:
                         wall_height=SCREEN_HEIGHT
 
-                    color = 255 / (1 + j * j* 0.0001)
-                    j*= math.cos(p_a - start_angle) 
-
-                    pygame.draw.rect(window,light_grey,(SCREEN_HEIGHT + i* SCALE, (SCREEN_HEIGHT / 2) - wall_height / 2, SCALE, wall_height))
+                    pygame.draw.rect(window,(color,color,color),(SCREEN_HEIGHT*0.5 + i* SCALE, (SCREEN_HEIGHT / 2) - wall_height / 2, SCALE, wall_height))
 
                     break
         start_angle+=(FOV/CASTED_RAYS) # at what angle to make the next line
@@ -99,6 +100,12 @@ while True:
     draw_map()
     raycast()
 
+    #fps display
+    fps=str(int(clock.get_fps()))
+    font=pygame.font.SysFont('Arial',20)
+    fp_disp=font.render(f"FPS: {fps}",False,(255,255,255))
+    window.blit(fp_disp,(int(SCREEN_WIDTH*0.02),SCREEN_HEIGHT*0.5))
+
 
     #player movement
     keys = pygame.key.get_pressed()
@@ -117,7 +124,16 @@ while True:
         p_y -= math.cos(p_a) * 5
 
     #collision detection
-    
+    r=int(p_y/TILE_SIZE)
+    c=int(p_x/TILE_SIZE)
+    sq=r*M_T+c
+    if MAP[sq]=='#':
+        if forward:
+            p_x-=-1*math.sin(p_a)*5
+            p_y-=math.cos(p_a)*5
+        else:
+            p_x_x += -1 * math.sin(p_a) * 5
+            p_x_y += math.cos(p_a) * 5
 
     pygame.display.flip()
     clock.tick(30)
